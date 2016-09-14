@@ -25,7 +25,18 @@
 
 package com.amihaiemil.charles.github;
 
+import java.util.List;
+
 import javax.json.JsonObject;
+
+import org.slf4j.Logger;
+
+import com.amihaiemil.charles.DataExportException;
+import com.amihaiemil.charles.GraphCrawl;
+import com.amihaiemil.charles.IgnoredPatterns;
+import com.amihaiemil.charles.Repository;
+import com.amihaiemil.charles.WebCrawl;
+import com.amihaiemil.charles.WebPage;
 import com.amihaiemil.charles.steps.IndexSite;
 import com.amihaiemil.charles.steps.Step;
 
@@ -58,17 +69,26 @@ public class IndexSteps implements Step {
      */
     private Step followup;
 
+    /**
+     * The action's logger.
+     */
+    private Logger logger;
+
+    /**
+     * Are we indexing a single page or the whole site?
+     */
     private boolean singlePage;
 
     /**
      * Constructor.
      * @param com Command.
      */
-    public IndexSteps(Command com, JsonObject repo, Step precStep, Step followup, boolean singlePage) {
+    public IndexSteps(Command com, JsonObject repo, Step precStep, Step followup, Logger logger, boolean singlePage) {
         this.com = com;
         this.repoJson = repo;
         this.preconditions = precStep;
         this.followup = followup;
+        this.logger = logger;
         this.singlePage = singlePage;
     }
 
@@ -107,17 +127,27 @@ public class IndexSteps implements Step {
      * @return IndexSite instance.
      */
     Step indexStep(Command com, String repoName, boolean ghPages, boolean singlePage) {
-    	if(!singlePage) {
-    	    if(!ghPages) {
-    		    return new IndexSite("http://" + repoName);
+        if(!singlePage) {
+            String url = "http://" + com.authorLogin() + ".github.io/";
+            if(!ghPages) {
+    	    	url = "http://" + repoName;
     	    }
-    	    return new IndexSite("http://" + com.authorLogin() + ".github.io/" + repoName);
+            String phantomJsExecPath =  System.getProperty("phantomjsExec");
+    	    if(phantomJsExecPath == null || "".equals(phantomJsExecPath)) {
+    	        phantomJsExecPath = "/usr/local/bin/phantomjs";
+    	    }
+    	    WebCrawl siteCrawl = new GraphCrawl(
+    	        url, phantomJsExecPath, new IgnoredPatterns(),
+    	        new Repository() {
+    	            @Override
+    	            public void export(List<WebPage> arg0) throws DataExportException {
+    			        // TODO to be replaced with AmazonEsRepository once it's implemented.
+    	            }
+    	        }, 20
+    	    );
+    	    return new IndexSite(siteCrawl, logger);
     	}
-    	if(!ghPages) { //here return IndexPage(...)
-		    return new IndexSite("http://" + repoName);
-	    }
-	    return new IndexSite("http://" + com.authorLogin() + ".github.io/" + repoName);
-
+        return null; //here return IndexPage(...)
     }
 
 }
