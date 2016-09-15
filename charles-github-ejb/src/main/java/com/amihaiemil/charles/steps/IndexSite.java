@@ -25,6 +25,11 @@
 
 package com.amihaiemil.charles.steps;
 
+import org.slf4j.Logger;
+
+import com.amihaiemil.charles.DataExportException;
+import com.amihaiemil.charles.WebCrawl;
+
 /**
  * Step to index a website.
  * @author Mihai Andronache (amihaiemil@gmail.com)
@@ -33,22 +38,34 @@ package com.amihaiemil.charles.steps;
  *
  */
 public class IndexSite implements Step {
-    /**
-     * Url to the index page of the website.
-     */
-	private String url;
-    
+
+	/**
+	 * Action's logger.
+	 */
+	private Logger logger;
+
+	/**
+	 * The Web crawl used.
+	 */
+	private WebCrawl siteCrawl;
+
     /**
      * Constructor.
      * @param url The website's url.
      */
-    public IndexSite(String url) {
-        this.url = url;
+    public IndexSite(WebCrawl crawl, Logger logger) {
+        this.logger = logger;
+        this.siteCrawl = crawl;
     }
 
 	@Override
 	public boolean perform() {
-		// TODO Auto-generated method stub
+        try {
+            this.siteCrawl.crawl();
+		} catch (DataExportException e) {
+			logger.error("Exception while crawling the website: " + e.getMessage(), e);
+			return false;
+		}
 		return true;
 	}
 
