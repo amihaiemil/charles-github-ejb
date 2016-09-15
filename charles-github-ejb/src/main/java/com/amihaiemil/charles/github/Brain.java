@@ -207,7 +207,7 @@ public class Brain {
 	    .build();
 		
 		steps.add(
-		    new IndexSteps(com, repo, preconditions, followup, singlePage)
+		    new IndexSteps(com, repo, preconditions, followup, this.logger, singlePage)
 		);
 
 		return steps;
