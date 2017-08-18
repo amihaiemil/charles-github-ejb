@@ -36,6 +36,11 @@ import java.io.IOException;
 public final class Conversation implements Knowledge {
 
     /**
+     * Location of the log file.
+     */
+    private LogsLocation logsLoc;
+    
+    /**
      * Languages that the chatbot speaks.
      */
     private Language[] languages;
@@ -47,34 +52,61 @@ public final class Conversation implements Knowledge {
 
     /**
      * Ctor.
+     * @param logsLoc Location of the log file for the bot's action.
      * @param followup Followup of this conversation; what does it know to do next?
      */
-    public Conversation(final Knowledge followup) {
-        this(followup, new English());
+    public Conversation(final LogsLocation logsLoc, final Knowledge followup) {
+        this(logsLoc, followup, new English());
     }
     
     /**
      * Ctor.
+     * @param logsLoc Location of the log file for the bot's action.
      * @param followup Followup of this conversation; what does it know to do next?
      * @param langs Languages that the bot speaks.
      */
-    public Conversation(final Knowledge followup, final Language... langs) {
+    public Conversation(final LogsLocation logsLoc, final Knowledge followup, final Language... langs) {
+        this.logsLoc = logsLoc;
         this.followup = followup;
         this.languages = langs;
     }
 
     @Override
     public Step handle(final Command com) throws IOException {
-    	String type = "unknown";
-    	Command understood = new Understood(com, type, this.languages[0]);
+        String type = "unknown";
+        com.type(type);
+        com.language(this.languages[0]);
         for(Language lang : this.languages) {
-        	type = lang.categorize(com);
+            type = lang.categorize(com);
             if(!"unknown".equals(type)) {
-                understood = new Understood(com, type, lang);
+            	com.type(type);
+            	com.language(lang);
                 break;
             }
         }
-        return this.followup.handle(understood);
+        return this.wrapSteps(this.followup.handle(com), com);
+    }
+    
+    /**
+     * Wrap all the steps in one big Step, so we are able to tell the user if anything failed, in the proper language.
+     * @param steps Tree of steps that handle the command.
+     * @param understood Understood command.
+     * @return Step.
+     */
+    private Step wrapSteps(final Step steps, final Command understood) {
+         return new Steps(
+             steps,
+             new SendReply(
+                 new TextReply(
+                     understood,
+                     String.format(
+                         understood.language().response("step.failure.comment"),
+                         understood.authorLogin(), this.logsLoc.address()
+                     )
+                 ),
+                 new Step.FinalStep("[ERROR] Some step didn't execute properly.")
+             )
+         );
     }
 
 }

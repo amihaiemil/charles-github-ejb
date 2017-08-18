@@ -46,10 +46,10 @@ import com.jcabi.github.Issue;
  */
 public class Action {
 
-	/**
-	 * This action's logger. Each action has its own logger
-	 * so any action is logged separately in its own log file.
-	 */
+    /**
+     * This action's logger. Each action has its own logger
+     * so any action is logged separately in its own log file.
+     */
     private Logger logger;
 
     /**
@@ -84,15 +84,19 @@ public class Action {
     
     
     public void perform() {
-        ValidCommand command;
+        Command command;
         try {
             this.logger.info("Started action " + this.id);
-            final LastComment lc = new LastComment(issue);
-            command = new ValidCommand(lc);
+            command = new CachedCommand(
+                new ValidCommand(
+                    new LastComment(issue)
+                )
+            );
             String commandBody = command.json().getString("body");
             this.logger.info("Received command: " + commandBody);
             
             final Knowledge knowledge = new Conversation(
+                this.logs,
                 new Hello(
                     new IndexSiteKn(
                         this.logs,
@@ -109,25 +113,12 @@ public class Action {
                     )
                 )
             );
-
-            final Steps steps = new Steps(
-            	knowledge.handle(command),
-                new SendReply(
-                    new TextReply(
-                        command,
-                        String.format(
-                        	command.language().response("step.failure.comment"),
-                            command.authorLogin(), this.logs.address()
-                        )
-                    ),
-                    new Step.FinalStep("[ERROR] Some step didn't execute properly.")
-                )
-            );
+            final Step steps = knowledge.handle(command);
             steps.perform(command, logger);
         } catch (final IllegalArgumentException e) {
             this.logger.warn("No command found in the issue or the agent has already replied to the last command!");
         } catch (final IOException e) {
-        	this.logger.error("Action failed entirely with exception: ",  e);
+            this.logger.error("Action failed entirely with exception: ",  e);
             this.sendReply(
                 new ErrorReply(logs.address(), this.issue)
             );
@@ -142,7 +133,7 @@ public class Action {
         try {
             reply.send();
         } catch (IOException e) {
-        	this.logger.error("FAILED TO REPLY!", e);
+            this.logger.error("FAILED TO REPLY!", e);
         }
     }
 

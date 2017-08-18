@@ -95,6 +95,20 @@ public abstract class Command {
     }
 
     /**
+     * Specify the command's type.
+     */
+    protected void type(final String type) {
+    	this.type = type;
+    }
+    
+    /**
+     * Specify the command's language.
+     */
+    protected void language(Language lang) {
+    	this.lang = lang;
+    }
+    
+    /**
      * Specify the comment json of this command.
      * @param com
      */

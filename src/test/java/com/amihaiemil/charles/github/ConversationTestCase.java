@@ -55,6 +55,7 @@ public final class ConversationTestCase {
         Mockito.when(french.categorize(com)).thenReturn("unknown");
 
         final Knowledge conversation = new Conversation(
+            Mockito.mock(LogsLocation.class),
             new Knowledge() {
                 @Override
                 public Step handle(final Command com) throws IOException {
@@ -85,6 +86,7 @@ public final class ConversationTestCase {
         Mockito.when(french.categorize(com)).thenReturn("oui");
 
         final Knowledge conversation = new Conversation(
+                Mockito.mock(LogsLocation.class),
                 new Knowledge() {
                     @Override
                     public Step handle(final Command com) throws IOException {
@@ -113,6 +115,7 @@ public final class ConversationTestCase {
         Mockito.when(english.categorize(com)).thenReturn("unknown");
 
         final Knowledge conversation = new Conversation(
+                Mockito.mock(LogsLocation.class),
                 new Knowledge() {
                     @Override
                     public Step handle(final Command com) throws IOException {

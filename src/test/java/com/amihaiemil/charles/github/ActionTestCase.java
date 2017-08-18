@@ -185,6 +185,7 @@ public class ActionTestCase {
                 .startsWith(expectedStartsWith)); //there should be only 2 comments - the command and the reply.
         
     }
+    
     /**
      * Creates an Issue with the given command.
      * @param commander Author of the comment;
