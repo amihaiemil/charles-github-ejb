@@ -34,7 +34,7 @@ import java.io.IOException;
  * @version $Id$
  * @since 1.0.1
  */
-public class Confused implements Knowledge {
+public final class Confused implements Knowledge {
 
     @Override
     public Step handle(Command com) throws IOException {
